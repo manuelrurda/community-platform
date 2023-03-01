@@ -67,6 +67,11 @@ export class HowtoStore extends ModuleStore {
     super(rootStore, COLLECTION_NAME)
     makeObservable(this)
     this.allDocs$.subscribe((docs: IHowtoDB[]) => {
+      console.log(
+        `HowtoStore.constructor.subscribe`,
+        COLLECTION_NAME,
+        docs.length,
+      )
       this.sortHowtosByLatest(docs)
     })
     this.selectedCategory = ''
@@ -85,6 +90,11 @@ export class HowtoStore extends ModuleStore {
     this.allHowtos = this.allHowtos.sort((a, b) =>
       (usefulCounts[a._id] || 0) < (usefulCounts[b._id] || 0) ? 1 : -1,
     )
+  }
+
+  @action
+  public getHowtosByUserId(userid: string) {
+    return this.allHowtos.filter((doc) => userid === doc._createdBy)
   }
 
   public getActiveHowToComments(): IComment[] {

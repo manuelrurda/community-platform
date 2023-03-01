@@ -7,6 +7,8 @@ import type { IUserPP } from 'src/models'
 import theme from 'src/themes/styled.theme'
 import styled from '@emotion/styled'
 import { Link } from 'react-router-dom'
+import { observer } from 'mobx-react'
+import { useResearchStore } from 'src/stores/Research/research.store'
 
 export const UserStatsBoxItem = styled.div`
   margin: ${theme.space[2]}px 0;
@@ -30,7 +32,8 @@ interface IProps {
   user: IUserPP
 }
 
-export const UserStats = ({ user }: IProps) => {
+export const UserStats = observer(({ user }: IProps) => {
+  const researchStore = useResearchStore()
   let howtoCount = 0
   let eventCount = 0
   try {
@@ -47,6 +50,7 @@ export const UserStats = ({ user }: IProps) => {
 
   return (
     <UserStatsBox mt={3} p={2} pb={0}>
+      <div>Research: {JSON.stringify(researchStore.getResearchByUserId())}</div>
       {user.badges?.verified && (
         <UserStatsBoxItem>
           <Image
@@ -82,4 +86,4 @@ export const UserStats = ({ user }: IProps) => {
       )}
     </UserStatsBox>
   )
-}
+})

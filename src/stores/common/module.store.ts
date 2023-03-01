@@ -91,8 +91,10 @@ export class ModuleStore {
    * be called from a specific page load instead.
    */
   init() {
+    console.log(`ModuleStore.init`, this.basePath, !this.isInitialized);
     if (!this.isInitialized) {
       if (this.basePath) {
+        console.log(`ModuleStore.init.subscribeToCollection`, this.basePath)
         this._subscribeToCollection(this.basePath)
         this.isInitialized = true
       }

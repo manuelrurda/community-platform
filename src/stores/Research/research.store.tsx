@@ -89,6 +89,11 @@ export class ResearchStore extends ModuleStore {
     return filterModerableItems(researches, this.activeUser)
   }
 
+  @action
+  public getResearchByUserId() {
+    return []
+  }
+
   public getActiveResearchUpdateComments(pointer: number): IComment[] {
     const comments = this.activeResearchItem?.updates[pointer]?.comments || []
 
