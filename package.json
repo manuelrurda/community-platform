@@ -100,6 +100,7 @@
     "oa-shared": "workspace:*",
     "pino": "^7.2.0",
     "pino-logflare": "^0.3.12",
+    "pretty-format": "^29.5.0",
     "pubsub-js": "^1.7.0",
     "react": "17.0.2",
     "react-dom": "17.0.2",

@@ -26,6 +26,7 @@ import { isModuleSupported, MODULE } from 'src/modules'
 import { logger } from 'src/logger'
 import { ProfileType } from 'src/modules/profile/types'
 import { AuthWrapper } from 'src/common/AuthWrapper'
+import { format as prettyFormat } from 'pretty-format' // ES2015 modules
 
 interface IProps {
   /** user ID for lookup when editing another user as admin */
@@ -327,22 +328,36 @@ export class UserSettings extends React.Component<IProps, IState> {
                     Save profile
                   </Button>
                   {this.state.showFormSubmitResult && (
-                    <TextNotification
-                      isVisible={this.state.showFormSubmitResult}
-                      variant={valid ? 'success' : 'failure'}
-                    >
-                      <Text>
-                        {valid ? (
-                          <>Profile saved successfully</>
-                        ) : (
-                          <>
-                            Ouch, something's wrong. Make sure all fields are
-                            filled correctly to save your profile.
-                          </>
-                        )}
-                      </Text>
-                    </TextNotification>
+                    <Box sx={{ mb: 3 }}>
+                      <TextNotification
+                        isVisible={this.state.showFormSubmitResult}
+                        variant={valid ? 'success' : 'failure'}
+                      >
+                        <Text>
+                          {valid ? (
+                            <>Profile saved successfully</>
+                          ) : (
+                            <>
+                              Ouch, something's wrong. Make sure all fields are
+                              filled correctly to save your profile.
+                            </>
+                          )}
+                        </Text>
+                      </TextNotification>
+                    </Box>
                   )}
+                  <AuthWrapper roleRequired="admin">
+                    <Card
+                      sx={{
+                        p: 4,
+                      }}
+                    >
+                      <Heading>Raw user object</Heading>
+                      <pre style={{ overflow: 'scroll' }}>
+                        {prettyFormat(user)}
+                      </pre>
+                    </Card>
+                  </AuthWrapper>
                 </Box>
               </Flex>
             </Flex>
