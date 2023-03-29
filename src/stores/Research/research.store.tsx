@@ -112,10 +112,21 @@ export class ResearchStore extends ModuleStore {
         .getWhere('slug', '==', slug)
       const researchItem: IResearch.ItemDB =
         collection.length > 0 ? collection[0] : undefined
+
+      const collaborators = researchItem
+        ? await Promise.all(
+            (researchItem.collaborators || [])
+              .filter(Boolean)
+              .map(async (username) => {
+                return this.userStore.getUserByUsername(username)
+              }),
+          )
+        : []
+
       runInAction(() => {
         this.activeResearchItem = {
           ...researchItem,
-          collaborators: researchItem.collaborators || [],
+          collaborators,
           description: changeUserReferenceToPlainText(researchItem.description),
           updates: researchItem.updates?.map((update) => {
             update.description = changeUserReferenceToPlainText(

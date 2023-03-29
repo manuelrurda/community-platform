@@ -134,7 +134,11 @@ const ResearchArticle = observer((props: IProps) => {
 
     const collaborators = Array.isArray(item.collaborators)
       ? item.collaborators
-      : ((item.collaborators as string) || '').split(',').filter(Boolean)
+      : []
+
+    // eslint-disable-next-line no-console
+    console.log(`ResearchArticle`, { collaborators })
+
     return (
       <Box sx={{ width: '100%', maxWidth: '1000px', alignSelf: 'center' }}>
         <ResearchDescription
@@ -175,10 +179,12 @@ const ResearchArticle = observer((props: IProps) => {
         >
           <ArticleCallToAction
             author={researchAuthor}
-            contributors={collaborators.map((c) => ({
-              userName: c,
-              isVerified: false,
-            }))}
+            contributors={
+              collaborators.map((c: any) => ({
+                userName: c.userName,
+                countryCode: c.country || undefined,
+              })) as any
+            }
           >
             <UsefulStatsButton
               isLoggedIn={!!loggedInUser}
