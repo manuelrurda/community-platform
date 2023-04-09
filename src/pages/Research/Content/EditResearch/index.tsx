@@ -3,15 +3,14 @@ import { observer } from 'mobx-react'
 import * as React from 'react'
 import type { RouteComponentProps } from 'react-router'
 import { Redirect } from 'react-router'
-import { Loader, Button } from 'oa-components'
-import { Box, Flex, Text } from 'theme-ui'
+import { Loader, BlockedRoute } from 'oa-components'
+import { Text } from 'theme-ui'
 import type { IResearch } from 'src/models/research.models'
 import type { IUser } from 'src/models/user.models'
 import ResearchForm from 'src/pages/Research/Content/Common/Research.form'
 import { useResearchStore } from 'src/stores/Research/research.store'
 import { isAllowToEditContent } from 'src/utils/helpers'
 import { logger } from '../../../../logger'
-import { Link } from 'react-router-dom'
 
 interface IState {
   formValues?: IResearch.ItemDB
@@ -71,19 +70,9 @@ const EditResearch = observer((props: IProps) => {
     if (formValues.locked) {
       logger.info('Research is locked', formValues.locked)
       return (
-        <Flex sx={{ justifyContent: 'center', flexDirection: 'column', mt: 8 }}>
-          <Text sx={{ width: '100%', textAlign: 'center' }}>
-            The Research Description is currently being edited by another
-            editor.
-          </Text>
-          <Box sx={{ textAlign: 'center', mt: 2 }}>
-            <Link to={'/'}>
-              <Button variant={'subtle'} small>
-                Back to home
-              </Button>
-            </Link>
-          </Box>
-        </Flex>
+        <BlockedRoute>
+          The Research Description is currently being edited by another editor.
+        </BlockedRoute>
       )
     }
 

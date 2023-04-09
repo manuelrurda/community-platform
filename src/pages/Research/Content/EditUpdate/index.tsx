@@ -3,9 +3,8 @@ import { observer } from 'mobx-react'
 import * as React from 'react'
 import type { RouteComponentProps } from 'react-router'
 import { Redirect } from 'react-router'
-import { Link } from 'react-router-dom'
-import { Loader, Button } from 'oa-components'
-import { Box, Flex, Text } from 'theme-ui'
+import { Loader, BlockedRoute } from 'oa-components'
+import { Text } from 'theme-ui'
 import type { IResearch } from 'src/models/research.models'
 import type { IUser } from 'src/models/user.models'
 import { ResearchUpdateForm } from 'src/pages/Research/Content/Common/ResearchUpdate.form'
@@ -89,20 +88,9 @@ const EditUpdate = observer((props: IProps) => {
     ) {
       if (formValues.locked) {
         return (
-          <Flex
-            sx={{ justifyContent: 'center', flexDirection: 'column', mt: 8 }}
-          >
-            <Text sx={{ width: '100%', textAlign: 'center' }}>
-              This Research Update is currently being edited by another editor.
-            </Text>
-            <Box sx={{ textAlign: 'center', mt: 2 }}>
-              <Link to={'/'}>
-                <Button variant={'subtle'} small>
-                  Back to home
-                </Button>
-              </Link>
-            </Box>
-          </Flex>
+          <BlockedRoute>
+            This Research Update is currently being edited by another editor.
+          </BlockedRoute>
         )
       }
 
