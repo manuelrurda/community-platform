@@ -12,7 +12,10 @@ export type IResearchStats = {
   votedUsefulCount: number
 }
 
-type UserIdList = string[]
+type UserId = string
+type DateString = string
+
+type UserIdList = UserId[]
 
 /** All typings related to the Research Module can be found here */
 export namespace IResearch {
@@ -24,6 +27,10 @@ export namespace IResearch {
     total_views?: number
     collaborators: string[]
     subscribers?: UserIdList
+    locked?: {
+      by: UserId
+      at: DateString
+    }
   } & Omit<FormInput, 'collaborators'>
 
   /** A research item update */

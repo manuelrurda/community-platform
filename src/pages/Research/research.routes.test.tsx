@@ -189,6 +189,34 @@ describe('research.routes', () => {
       })
     })
 
+    it('blocks a valid editor when document is locked', async () => {
+      const activeUser = FactoryUser({
+        userRoles: ['beta-tester'],
+      })
+      ;(useResearchStore as jest.Mock).mockReturnValue({
+        ...mockResearchStore,
+        activeUser,
+        activeResearchItem: FactoryResearchItem({
+          collaborators: [activeUser.userName],
+          slug: 'research-slug',
+          locked: {
+            by: 'jasper', // user_id
+            at: new Date().toISOString(),
+          },
+        }),
+      })
+
+      const { wrapper } = renderFn('/research/an-example/edit', activeUser)
+
+      await waitFor(() => {
+        expect(
+          wrapper.getByText(
+            'The Research Description is currently being edited by another editor.',
+          ),
+        ).toBeInTheDocument()
+      })
+    })
+
     it('accepts a user with required role and contributor acccess', async () => {
       const activeUser = FactoryUser({
         userRoles: ['beta-tester'],
