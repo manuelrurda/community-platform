@@ -15,6 +15,11 @@ export type IResearchStats = {
 type UserId = string
 type DateString = string
 
+type ResearchDocumentLock = {
+  by: UserId
+  at: DateString
+}
+
 type UserIdList = UserId[]
 
 /** All typings related to the Research Module can be found here */
@@ -27,10 +32,7 @@ export namespace IResearch {
     total_views?: number
     collaborators: string[]
     subscribers?: UserIdList
-    locked?: {
-      by: UserId
-      at: DateString
-    }
+    locked?: ResearchDocumentLock
   } & Omit<FormInput, 'collaborators'>
 
   /** A research item update */
@@ -43,6 +45,7 @@ export namespace IResearch {
     total_views?: number
     collaborators?: string[]
     status: 'draft' | 'published'
+    locked?: ResearchDocumentLock
   }
 
   export interface FormInput extends IModerable {

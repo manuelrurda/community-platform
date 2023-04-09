@@ -303,6 +303,44 @@ describe('research.routes', () => {
       })
     })
 
+    it('blocks valid author when document is locked', async () => {
+      // Arrange
+      const activeUser = FactoryUser({
+        userRoles: ['beta-tester'],
+      })
+      ;(useResearchStore as jest.Mock).mockReturnValue({
+        ...mockResearchStore,
+        activeUser,
+        activeResearchItem: FactoryResearchItem({
+          collaborators: undefined,
+          _createdBy: activeUser.userName,
+          slug: 'an-example',
+          updates: [
+            FactoryResearchItemUpdate({
+              _id: 'nested-research-update',
+              locked: {
+                by: 'jasper', // user_id
+                at: new Date().toISOString(),
+              },
+            }),
+          ],
+        }),
+      })
+
+      const { wrapper } = renderFn(
+        '/research/an-example/edit-update/nested-research-update',
+        activeUser,
+      )
+
+      await waitFor(() => {
+        expect(
+          wrapper.getByText(
+            /This Research Update is currently being edited by another editor/,
+          ),
+        ).toBeInTheDocument()
+      })
+    })
+
     it('rejects logged in user who is not author', async () => {
       const { wrapper } = renderFn(
         '/research/an-example/edit-update/nested-research-update',
