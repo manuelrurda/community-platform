@@ -124,7 +124,6 @@ export const ResearchUpdateForm = observer((props: IProps) => {
 
   return (
     <>
-      {JSON.stringify(props.formValues)}
       {showSubmitModal && (
         <UpdateSubmitStatus
           {...props}
