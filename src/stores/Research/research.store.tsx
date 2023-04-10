@@ -853,6 +853,49 @@ export class ResearchStore extends ModuleStore {
       })
     }
   }
+
+  @action
+  public async lockResearchUpdate(username: string, updateId: string) {
+    const item = this.activeResearchItem
+    if (item) {
+      const dbRef = this.db
+        .collection<IResearch.Item>(COLLECTION_NAME)
+        .doc(item._id)
+      const updateIndex = item.updates.findIndex((upd) => upd._id === updateId)
+      const newItem = {
+        ...item,
+        updates: [...item.updates],
+      }
+      newItem.updates[updateIndex].locked = {
+        by: username,
+        at: new Date().toISOString(),
+      }
+      await this.updateResearchItem(dbRef, newItem)
+      runInAction(() => {
+        this.activeResearchItem = newItem
+      })
+    }
+  }
+
+  @action
+  public async unlockResearchUpdate(updateId: string) {
+    const item = this.activeResearchItem
+    if (item) {
+      const dbRef = this.db
+        .collection<IResearch.Item>(COLLECTION_NAME)
+        .doc(item._id)
+      const updateIndex = item.updates.findIndex((upd) => upd._id === updateId)
+      const newItem = {
+        ...item,
+        updates: [...item.updates],
+      }
+      newItem.updates[updateIndex].locked = null
+      await this.updateResearchItem(dbRef, newItem)
+      runInAction(() => {
+        this.activeResearchItem = newItem
+      })
+    }
+  }
 }
 
 interface IResearchUploadStatus {

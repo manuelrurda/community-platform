@@ -86,7 +86,10 @@ const EditUpdate = observer((props: IProps) => {
       loggedInUser &&
       isAllowToEditContent(store.activeResearchItem!, loggedInUser)
     ) {
-      if (formValues.locked) {
+      if (
+        formValues.locked &&
+        formValues.locked.by !== loggedInUser?.userName
+      ) {
         return (
           <BlockedRoute>
             This Research Update is currently being edited by another editor.

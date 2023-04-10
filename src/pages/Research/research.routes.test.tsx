@@ -49,6 +49,8 @@ class mockResearchStoreClass implements Partial<ResearchStore> {
   updateUploadStatus = {} as any
   getActiveResearchUpdateComments = jest.fn()
   lockResearchItem = jest.fn()
+  lockResearchUpdate = jest.fn()
+  unlockResearchUpdate = jest.fn()
 
   get activeUser() {
     return {
@@ -363,6 +365,38 @@ describe('research.routes', () => {
             /This Research Update is currently being edited by another editor/,
           ),
         ).toBeInTheDocument()
+      })
+    })
+
+    it('accepts a user when document is mark locked by them', async () => {
+      const activeUser = FactoryUser({
+        userRoles: ['beta-tester'],
+      })
+      ;(useResearchStore as jest.Mock).mockReturnValue({
+        ...mockResearchStore,
+        activeUser,
+        activeResearchItem: FactoryResearchItem({
+          collaborators: [activeUser.userName],
+          slug: 'research-slug',
+          updates: [
+            FactoryResearchItemUpdate({
+              _id: 'nested-research-update',
+              locked: {
+                by: activeUser.userName,
+                at: new Date().toISOString(),
+              },
+            }),
+          ],
+        }),
+      })
+
+      const { wrapper } = renderFn(
+        '/research/an-example/edit-update/nested-research-update',
+        activeUser,
+      )
+
+      await waitFor(() => {
+        expect(wrapper.getByText('Edit your update')).toBeInTheDocument()
       })
     })
 
