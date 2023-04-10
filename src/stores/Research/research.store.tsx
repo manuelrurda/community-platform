@@ -814,6 +814,45 @@ export class ResearchStore extends ModuleStore {
     const userVotedResearch = this.activeUser?.votedUsefulResearch || {}
     return userVotedResearch[researchId] ? true : false
   }
+
+  @action
+  public async lockResearchItem(username: string) {
+    const item = this.activeResearchItem
+    if (item) {
+      const dbRef = this.db
+        .collection<IResearch.Item>(COLLECTION_NAME)
+        .doc(item._id)
+      const newItem = {
+        ...item,
+        locked: {
+          by: username,
+          at: new Date().toISOString(),
+        },
+      }
+      await this.updateResearchItem(dbRef, newItem)
+      runInAction(() => {
+        this.activeResearchItem = newItem
+      })
+    }
+  }
+
+  @action
+  public async unlockResearchItem() {
+    const item = this.activeResearchItem
+    if (item) {
+      const dbRef = this.db
+        .collection<IResearch.Item>(COLLECTION_NAME)
+        .doc(item._id)
+      const newItem = {
+        ...item,
+        locked: null,
+      }
+      await this.updateResearchItem(dbRef, newItem)
+      runInAction(() => {
+        this.activeResearchItem = newItem
+      })
+    }
+  }
 }
 
 interface IResearchUploadStatus {

@@ -70,6 +70,15 @@ const ResearchForm = observer((props: IProps) => {
     shouldSubmit: false,
   })
 
+  // Managing locked state
+  React.useEffect(() => {
+    if (store.activeUser) store.lockResearchItem(store.activeUser.userName)
+
+    return () => {
+      store.unlockResearchItem()
+    }
+  })
+
   React.useEffect(() => {
     if (store.researchUploadStatus.Complete) {
       window.removeEventListener('beforeunload', beforeUnload, false)

@@ -18,7 +18,7 @@ type DateString = string
 type ResearchDocumentLock = {
   by: UserId
   at: DateString
-}
+} | null
 
 type UserIdList = UserId[]
 

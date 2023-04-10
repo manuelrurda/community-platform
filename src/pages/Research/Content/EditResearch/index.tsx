@@ -67,7 +67,7 @@ const EditResearch = observer((props: IProps) => {
   const { formValues, isLoading, loggedInUser } = state
 
   if (formValues && !isLoading) {
-    if (formValues.locked) {
+    if (formValues.locked && formValues.locked.by !== loggedInUser?.userName) {
       logger.info('Research is locked', formValues.locked)
       return (
         <BlockedRoute>
