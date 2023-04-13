@@ -91,8 +91,11 @@ const EditUpdate = observer((props: IProps) => {
         formValues.locked.by !== loggedInUser?.userName
       ) {
         return (
-          <BlockedRoute>
-            This Research Update is currently being edited by another editor.
+          <BlockedRoute
+            redirectLabel="Back to research"
+            redirectUrl={`/research/${props.match.params.slug}`}
+          >
+            This research update is currently being edited by another editor.
           </BlockedRoute>
         )
       }
