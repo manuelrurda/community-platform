@@ -134,7 +134,7 @@ const ResearchDescription = ({ research, isEditable, ...props }: IProps) => {
             </AuthWrapper>
           ) : null}
           {/* Check if research should be moderated */}
-          {props.needsModeration && (
+          {props.needsModerations && (
             <Flex sx={{ justifyContent: 'space-between' }}>
               <Button
                 data-cy={'accept'}
