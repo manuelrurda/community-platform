@@ -71,7 +71,7 @@ const EditResearch = observer((props: IProps) => {
       logger.info('Research is locked', formValues.locked)
       return (
         <BlockedRoute>
-          The Research Description is currently being edited by another editor.
+          The research description is currently being edited by another editor.
         </BlockedRoute>
       )
     }

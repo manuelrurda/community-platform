@@ -214,7 +214,7 @@ describe('research.routes', () => {
       await waitFor(() => {
         expect(
           wrapper.getByText(
-            'The Research Description is currently being edited by another editor.',
+            'The research description is currently being edited by another editor.',
           ),
         ).toBeInTheDocument()
       })
