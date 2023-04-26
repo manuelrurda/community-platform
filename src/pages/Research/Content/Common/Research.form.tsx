@@ -342,14 +342,14 @@ const ResearchForm = observer((props: IProps) => {
                                     }}
                                   >
                                     <Label
-                                      htmlFor="filesUpload"
+                                      htmlFor="files"
                                       style={{ fontSize: '12px' }}
                                     >
                                       Or upload your files here
                                     </Label>
                                     <Field
-                                      name="filesUpload"
-                                      id="filesUpload"
+                                      name="files"
+                                      id="files"
                                       component={FileInputField}
                                     />
                                   </Flex>
