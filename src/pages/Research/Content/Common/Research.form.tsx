@@ -44,10 +44,7 @@ interface IProps extends RouteComponentProps<any> {
 }
 
 const ResearchFormLabel = ({ children, ...props }) => (
-  <Label
-    sx={{ fontSize: 2, mb: 2, display: 'block', color: 'black' }}
-    {...props}
-  >
+  <Label sx={{ fontSize: 2, mb: 2, display: 'block' }} {...props}>
     {children}
   </Label>
 )
@@ -321,9 +318,12 @@ const ResearchForm = observer((props: IProps) => {
                                     }}
                                     mb={3}
                                   >
-                                    <ResearchFormLabel htmlFor="fileLink">
+                                    <Label
+                                      htmlFor="fileLink"
+                                      sx={{ fontSize: 1, mb: 2 }}
+                                    >
                                       Add a download link
-                                    </ResearchFormLabel>
+                                    </Label>
                                     <Field
                                       id="fileLink"
                                       name="fileLink"
@@ -341,9 +341,12 @@ const ResearchForm = observer((props: IProps) => {
                                       flexDirection: 'column',
                                     }}
                                   >
-                                    <ResearchFormLabel htmlFor="files">
+                                    <Label
+                                      htmlFor="files"
+                                      sx={{ fontSize: 1, mb: 2 }}
+                                    >
                                       Or upload your files here
-                                    </ResearchFormLabel>
+                                    </Label>
                                     <Field
                                       name="files"
                                       id="files"
