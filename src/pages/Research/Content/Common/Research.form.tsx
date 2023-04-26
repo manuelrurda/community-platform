@@ -44,7 +44,10 @@ interface IProps extends RouteComponentProps<any> {
 }
 
 const ResearchFormLabel = ({ children, ...props }) => (
-  <Label sx={{ fontSize: 2, mb: 2, display: 'block' }} {...props}>
+  <Label
+    sx={{ fontSize: 2, mb: 2, display: 'block', color: 'black' }}
+    {...props}
+  >
     {children}
   </Label>
 )
