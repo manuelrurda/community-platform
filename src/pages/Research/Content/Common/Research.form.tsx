@@ -273,9 +273,9 @@ const ResearchForm = observer((props: IProps) => {
                                 placeholder="A comma separated list of usernames."
                               />
                             </Flex>
-                            <Label>
+                            <ResearchFormLabel>
                               Do you have supporting file you would like to add?
-                            </Label>
+                            </ResearchFormLabel>
                             <Flex
                               sx={{ flexDirection: 'column' }}
                               mb={[4, 4, 0]}
@@ -318,12 +318,9 @@ const ResearchForm = observer((props: IProps) => {
                                     }}
                                     mb={3}
                                   >
-                                    <Label
-                                      htmlFor="fileLink"
-                                      style={{ fontSize: '12px' }}
-                                    >
+                                    <ResearchFormLabel htmlFor="fileLink">
                                       Add a download link
-                                    </Label>
+                                    </ResearchFormLabel>
                                     <Field
                                       id="fileLink"
                                       name="fileLink"
@@ -341,12 +338,9 @@ const ResearchForm = observer((props: IProps) => {
                                       flexDirection: 'column',
                                     }}
                                   >
-                                    <Label
-                                      htmlFor="files"
-                                      style={{ fontSize: '12px' }}
-                                    >
+                                    <ResearchFormLabel htmlFor="files">
                                       Or upload your files here
-                                    </Label>
+                                    </ResearchFormLabel>
                                     <Field
                                       name="files"
                                       id="files"
