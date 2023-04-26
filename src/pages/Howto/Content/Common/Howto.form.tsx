@@ -348,7 +348,7 @@ export class HowtoForm extends React.PureComponent<IProps, IState> {
                                   placeholder="Introduction to your How-To (max 400 characters)"
                                 />
                               </Flex>
-                              <Label htmlFor="description">
+                              <Label>
                                 Do you have supporting file to help others
                                 replicate your How-to?
                               </Label>
@@ -395,7 +395,7 @@ export class HowtoForm extends React.PureComponent<IProps, IState> {
                                       mb={3}
                                     >
                                       <Label
-                                        htmlFor="file-download-link"
+                                        htmlFor="fileLink"
                                         style={{ fontSize: '12px' }}
                                       >
                                         Add a download link
@@ -418,13 +418,14 @@ export class HowtoForm extends React.PureComponent<IProps, IState> {
                                       }}
                                     >
                                       <Label
-                                        htmlFor="files"
+                                        htmlFor="filesUpload"
                                         style={{ fontSize: '12px' }}
                                       >
                                         Or upload your files here
                                       </Label>
                                       <Field
-                                        name="files"
+                                        name="filesUpload"
+                                        id="filesUpload"
                                         component={FileInputField}
                                       />
                                     </Flex>
