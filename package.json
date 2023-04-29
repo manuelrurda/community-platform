@@ -103,8 +103,6 @@
     "oa-components": "workspace:*",
     "oa-shared": "workspace:*",
     "oa-themes": "workspace:*",
-    "pino": "^7.2.0",
-    "pino-logflare": "^0.3.12",
     "react": "17.0.2",
     "react-dom": "17.0.2",
     "react-dropzone": "^10.1.10",
@@ -133,6 +131,7 @@
     "styled-system": "^5.1.5",
     "theme-ui": "^0.15.7",
     "ts-node": "^10.4.0",
+    "tslog": "^4.8.2",
     "web-vitals": "^1.1.2",
     "workbox-window": "^6.1.5",
     "yup": "^0.32.9"
