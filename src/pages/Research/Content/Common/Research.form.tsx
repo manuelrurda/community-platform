@@ -77,7 +77,7 @@ const ResearchForm = observer((props: IProps) => {
     return () => {
       store.unlockResearchItem()
     }
-  })
+  }, [store.activeUser])
 
   React.useEffect(() => {
     if (store.researchUploadStatus.Complete) {

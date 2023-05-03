@@ -15,10 +15,12 @@ export type IResearchStats = {
 type UserId = string
 type DateString = string
 
-type ResearchDocumentLock = {
+type ResearchDocumentLockInformation = {
   by: UserId
   at: DateString
-} | null
+}
+
+type ResearchDocumentLock = ResearchDocumentLockInformation | null
 
 type UserIdList = UserId[]
 

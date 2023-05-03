@@ -70,7 +70,7 @@ export const ResearchUpdateForm = observer((props: IProps) => {
     return () => {
       store.unlockResearchUpdate(props.formValues._id)
     }
-  })
+  }, [store.activeUser])
 
   const trySubmitForm = (isDraft: boolean) => {
     const form = document.getElementById('updateForm')
