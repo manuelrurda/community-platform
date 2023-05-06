@@ -41,12 +41,13 @@ export const getConfigurationOption = _c
 /********************************************************************************************** */
 
 // On dev sites user can override default role
-const devSiteRole: UserRole = localStorage.getItem('devSiteRole') as UserRole
+const devSiteRole = localStorage ? localStorage.getItem('devSiteRole') : ''  as UserRole
 
 const getSiteVariant = (): siteVariants => {
-  const devSiteVariant: siteVariants = localStorage.getItem(
+  const devSiteVariant: siteVariants = localStorage? localStorage.getItem(
     'devSiteVariant',
-  ) as any
+  ) as any : 
+  ''
 
   if (devSiteVariant === 'preview') {
     return 'preview'

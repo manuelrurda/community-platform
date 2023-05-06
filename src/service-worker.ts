@@ -9,6 +9,23 @@ import { CacheableResponsePlugin } from 'workbox-cacheable-response'
 import { CacheFirst, StaleWhileRevalidate } from 'workbox-strategies'
 import { BackgroundSyncPlugin } from 'workbox-background-sync'
 import type { PrecacheEntry } from 'workbox-precaching/_types'
+import { logger } from './logger'
+
+self.addEventListener('fetch', (event) => {
+  event.respondWith(
+    fetch(event.request).then(response => {
+      logger.info(`Response status: ${response.status}`, response);
+      // eslint-disable-next-line no-console
+      console.log(`Response status: ${response.status}`, response);
+      if (response.status === 404) {
+        // eslint-disable-next-line no-console
+        console.log('404 error:', event.request.url);
+      }
+      return response;
+    })
+  );
+});
+
 
 setCacheNameDetails({
   prefix: 'oa',
@@ -160,3 +177,4 @@ self.addEventListener('message', (event) => {
     self.skipWaiting()
   }
 })
+
