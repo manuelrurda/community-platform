@@ -6,6 +6,7 @@ import {
   runInAction,
   toJS,
 } from 'mobx'
+import { cloneDeep } from 'lodash'
 import { createContext, useContext } from 'react'
 import { MAX_COMMENT_LENGTH } from 'src/constants'
 import { logger } from 'src/logger'
@@ -115,20 +116,7 @@ export class ResearchStore extends ModuleStore {
 
     if (slug) {
       this.researchStats = undefined
-
-      const collection = await this.db
-        .collection<IResearch.ItemDB>(COLLECTION_NAME)
-        .getWhere('slug', '==', slug)
-      activeResearchItem = collection.length > 0 ? collection[0] : null
-      logger.debug('active research item', activeResearchItem)
-
-      if (!activeResearchItem) {
-        const collection = await this.db
-          .collection<IResearch.ItemDB>(COLLECTION_NAME)
-          .getWhere('previousSlugs', 'array-contains', slug)
-
-        activeResearchItem = collection.length > 0 ? collection[0] : null
-      }
+      activeResearchItem = await this._getResearchItemBySlug(slug)
 
       if (activeResearchItem) {
         activeResearchItem.collaborators =
@@ -150,7 +138,9 @@ export class ResearchStore extends ModuleStore {
       await this.loadResearchStats(activeResearchItem?._id)
     }
 
-    this.activeResearchItem = activeResearchItem
+    runInAction(() => {
+      this.activeResearchItem = activeResearchItem
+    })
     return activeResearchItem
   }
 
@@ -162,15 +152,14 @@ export class ResearchStore extends ModuleStore {
 
     const researchData = await toJS(dbRef.get('server'))
     if (researchData && !(researchData?.subscribers || []).includes(userId)) {
-      await this.updateResearchItem(dbRef, {
+      const updatedItem = await this._updateResearchItem(dbRef, {
         ...researchData,
         subscribers: [userId].concat(researchData?.subscribers || []),
       })
 
-      const createdItem = (await dbRef.get()) as IResearch.ItemDB
-      runInAction(() => {
-        this.activeResearchItem = createdItem
-      })
+      if (updatedItem) {
+        this.setActiveResearchItemBySlug(updatedItem.slug)
+      }
     }
 
     return
@@ -184,17 +173,16 @@ export class ResearchStore extends ModuleStore {
 
     const researchData = await toJS(dbRef.get('server'))
     if (researchData) {
-      await this.updateResearchItem(dbRef, {
+      const updatedItem = await this._updateResearchItem(dbRef, {
         ...researchData,
         subscribers: (researchData?.subscribers || []).filter(
           (id) => id !== userId,
         ),
       })
 
-      const createdItem = (await dbRef.get()) as IResearch.ItemDB
-      runInAction(() => {
-        this.activeResearchItem = createdItem
-      })
+      if (updatedItem) {
+        this.setActiveResearchItemBySlug(updatedItem.slug)
+      }
     }
 
     return
@@ -294,12 +282,12 @@ export class ResearchStore extends ModuleStore {
     update: IResearch.Update | IResearch.UpdateDB,
   ) {
     const user = this.activeUser
-    const item = this.activeResearchItem
+    const researchItem = this.activeResearchItem
     const comment = text.slice(0, MAX_COMMENT_LENGTH).trim()
-    if (item && comment && user) {
+    if (researchItem && comment && user) {
       const dbRef = this.db
         .collection<IResearch.Item>(COLLECTION_NAME)
-        .doc(item._id)
+        .doc(researchItem._id)
       const id = dbRef.id
 
       try {
@@ -330,20 +318,20 @@ export class ResearchStore extends ModuleStore {
           ? [...toJS(updateWithMeta.comments), newComment]
           : [newComment]
 
-        const existingUpdateIndex = item.updates.findIndex(
+        const existingUpdateIndex = researchItem.updates.findIndex(
           (upd) => upd._id === (update as IResearch.UpdateDB)._id,
         )
 
         const newItem = {
-          ...toJS(item),
-          updates: [...toJS(item.updates)],
+          ...toJS(researchItem),
+          updates: [...toJS(researchItem.updates)],
         }
 
         newItem.updates[existingUpdateIndex] = {
           ...(updateWithMeta as IResearch.UpdateDB),
         }
 
-        await this.updateResearchItem(dbRef, newItem)
+        await this._updateResearchItem(dbRef, newItem)
 
         // Notify author and contributors
         await this.userNotificationsStore.triggerNotification(
@@ -361,9 +349,9 @@ export class ResearchStore extends ModuleStore {
         })
 
         const createdItem = (await dbRef.get()) as IResearch.ItemDB
-        runInAction(() => {
-          this.activeResearchItem = createdItem
-        })
+        if (createdItem) {
+          this.setActiveResearchItemBySlug(createdItem.slug)
+        }
       } catch (error) {
         logger.error(error)
         throw new Error(error?.message)
@@ -386,7 +374,10 @@ export class ResearchStore extends ModuleStore {
 
         const newComments = toJS(update.comments).filter(
           (comment) =>
-            !(comment._creatorId === user._id && comment._id === commentId),
+            !(
+              (comment._creatorId === user._id || hasAdminRights(user)) &&
+              comment._id === commentId
+            ),
         )
 
         const updateWithMeta = { ...update }
@@ -417,11 +408,10 @@ export class ResearchStore extends ModuleStore {
           ...(updateWithMeta as IResearch.UpdateDB),
         }
 
-        await this.updateResearchItem(dbRef, newItem)
-        const createdItem = (await dbRef.get()) as IResearch.ItemDB
-        runInAction(() => {
-          this.activeResearchItem = createdItem
-        })
+        const updatedItem = await this._updateResearchItem(dbRef, newItem)
+        if (updatedItem) {
+          this.setActiveResearchItemBySlug(updatedItem.slug)
+        }
       }
     } catch (err) {
       logger.error(err)
@@ -446,7 +436,8 @@ export class ResearchStore extends ModuleStore {
         const pastComments = toJS(update.comments)
         const commentIndex = pastComments.findIndex(
           (comment) =>
-            comment._creatorId === user._id && comment._id === commentId,
+            (comment._creatorId === user._id || hasAdminRights(user)) &&
+            comment._id === commentId,
         )
         const updateWithMeta = { ...update }
         if (update.images.length > 0) {
@@ -479,151 +470,17 @@ export class ResearchStore extends ModuleStore {
             ...(updateWithMeta as IResearch.UpdateDB),
           }
 
-          await this.updateResearchItem(dbRef, newItem)
-          const createdItem = (await dbRef.get()) as IResearch.ItemDB
-          runInAction(() => {
-            this.activeResearchItem = createdItem
-          })
+          const updatedItem = await this._updateResearchItem(dbRef, newItem)
+
+          if (updatedItem) {
+            this.setActiveResearchItemBySlug(updatedItem.slug)
+          }
         }
       }
     } catch (err) {
       logger.error(err)
       throw new Error(err)
     }
-  }
-
-  /**
-   * Updates supplied dbRef after
-   * converting @mentions to user references
-   * on all required properties within researchItem object.
-   *
-   */
-  private async updateResearchItem(
-    dbRef: DocReference<IResearch.Item>,
-    researchItem: IResearch.Item,
-  ) {
-    const { text: researchDescription, users } = await this.addUserReference(
-      researchItem.description,
-    )
-    logger.debug('updateResearchItem', {
-      before: researchItem.description,
-      after: researchDescription,
-    })
-
-    const previousVersion = toJS(await dbRef.get('server'))
-
-    const mentions: any = []
-
-    await Promise.all(
-      researchItem.updates.map(async (up, idx) => {
-        const { text: newDescription, users } = await this.addUserReference(
-          up.description,
-        )
-
-        ;(users || []).map((username) => {
-          mentions.push({
-            username,
-            location: `update-${idx}`,
-          })
-        })
-
-        researchItem.updates[idx].description = newDescription
-
-        if (researchItem.updates[idx]) {
-          await Promise.all(
-            (researchItem.updates[idx].comments || ([] as IComment[])).map(
-              async (comment, commentIdx) => {
-                const { text, users } = await this.addUserReference(
-                  comment.text,
-                )
-
-                const researchUpdate = researchItem.updates[idx]
-                if (researchUpdate.comments) {
-                  researchUpdate.comments[commentIdx].text = text
-
-                  users.map((username) => {
-                    mentions.push({
-                      username,
-                      location: `update-${idx}-comment:${comment._id}`,
-                    })
-                  })
-                }
-              },
-            ),
-          )
-        }
-      }),
-    )
-    ;(users || []).map((username) => {
-      mentions.push({
-        username,
-        location: 'description',
-      })
-    })
-
-    if (researchItem.previousSlugs === undefined) {
-      researchItem.previousSlugs = []
-    }
-
-    if (!researchItem.previousSlugs.includes(researchItem.slug)) {
-      researchItem.previousSlugs.push(researchItem.slug)
-    }
-
-    await dbRef.set({
-      ...researchItem,
-      mentions,
-      description: researchDescription,
-    })
-
-    const previousMentionsList = researchItem.mentions || []
-    logger.debug(`Mentions:`, {
-      before: previousMentionsList,
-      after: mentions,
-    })
-
-    // Previous mentions
-    const previousMentions = previousMentionsList.map(
-      (mention) => `${mention.username}.${mention.location}`,
-    )
-
-    mentions.forEach((mention) => {
-      if (
-        !previousMentions.includes(`${mention.username}.${mention.location}`)
-      ) {
-        this.userNotificationsStore.triggerNotification(
-          'research_mention',
-          mention.username,
-          `/research/${researchItem.slug}#${mention.location}`,
-        )
-      }
-    })
-
-    // Notify each subscriber
-    const subscribers = researchItem.subscribers || []
-
-    // Only notify subscribers if there is a new update added
-    logger.debug('Notify each subscriber', {
-      subscribers,
-      beforeUpdateNumber: previousVersion?.updates
-        ? previousVersion?.updates.length
-        : 0,
-      afterUpdateNumber: researchItem?.updates.length,
-    })
-
-    if (
-      researchItem.updates.length >
-      (previousVersion?.updates ? previousVersion?.updates.length : 0)
-    ) {
-      subscribers.forEach((subscriber) =>
-        this.userNotificationsStore.triggerNotification(
-          'research_update',
-          subscriber,
-          `/research/${researchItem.slug}`,
-        ),
-      )
-    }
-
-    return await dbRef.get()
   }
 
   public async uploadResearch(values: IResearch.FormInput) {
@@ -673,13 +530,12 @@ export class ResearchStore extends ModuleStore {
       }
       logger.debug('populating database', researchItem)
       // set the database document
-      await this.updateResearchItem(dbRef, researchItem)
+      const updatedItem = await this._updateResearchItem(dbRef, researchItem)
       this.updateResearchUploadStatus('Database')
       logger.debug('post added')
-      const newItem = (await dbRef.get()) as IResearch.ItemDB
-      runInAction(() => {
-        this.activeResearchItem = newItem
-      })
+      if (updatedItem) {
+        this.setActiveResearchItemBySlug(updatedItem.slug)
+      }
       // complete
       this.updateResearchUploadStatus('Complete')
     } catch (error) {
@@ -756,7 +612,7 @@ export class ResearchStore extends ModuleStore {
         logger.debug('created:', newItem._created)
 
         // set the database document
-        await this.updateResearchItem(dbRef, newItem)
+        await this._updateResearchItem(dbRef, newItem)
         logger.debug('populate db ok')
         this.updateUpdateUploadStatus('Database')
         const createdItem = (await dbRef.get()) as IResearch.ItemDB
@@ -796,13 +652,13 @@ export class ResearchStore extends ModuleStore {
         newItem.updates[existingUpdateIndex]._deleted = true
 
         // set the database document
-        await this.updateResearchItem(dbRef, newItem)
-        const createdItem = (await dbRef.get()) as IResearch.ItemDB
-        runInAction(() => {
-          this.activeResearchItem = createdItem
-        })
+        const updatedItem = await this._updateResearchItem(dbRef, newItem)
 
-        return createdItem
+        if (updatedItem) {
+          this.setActiveResearchItemBySlug(updatedItem.slug)
+        }
+
+        return updatedItem
       } catch (error) {
         logger.error('error deleting article', error)
       }
@@ -895,6 +751,170 @@ export class ResearchStore extends ModuleStore {
         this.activeResearchItem = newItem
       })
     }
+
+  get userHasSubscribed(): boolean {
+    return (
+      this.activeResearchItem?.subscribers?.includes(
+        this.activeUser?.userName ?? '',
+      ) ?? false
+    )
+  }
+
+  /**
+   * Updates supplied dbRef after
+   * converting @mentions to user references
+   * on all required properties within researchItem object.
+   *
+   */
+  private async _updateResearchItem(
+    dbRef: DocReference<IResearch.Item>,
+    researchItem: IResearch.Item,
+  ) {
+    const { text: researchDescription, users } = await this.addUserReference(
+      researchItem.description,
+    )
+    logger.debug('updateResearchItem', {
+      researchItem,
+    })
+
+    const previousVersion = toJS(await dbRef.get('server'))
+
+    const mentions: any = []
+
+    await Promise.all(
+      researchItem.updates.map(async (up, idx) => {
+        const { text: newDescription, users } = await this.addUserReference(
+          up.description,
+        )
+
+        ;(users || []).map((username) => {
+          mentions.push({
+            username,
+            location: `update-${idx}`,
+          })
+        })
+
+        researchItem.updates[idx].description = newDescription
+
+        if (researchItem.updates[idx]) {
+          await Promise.all(
+            (researchItem.updates[idx].comments || ([] as IComment[])).map(
+              async (comment, commentIdx) => {
+                const { text, users } = await this.addUserReference(
+                  comment.text,
+                )
+
+                const researchUpdate = researchItem.updates[idx]
+                if (researchUpdate.comments) {
+                  researchUpdate.comments[commentIdx].text = text
+
+                  users.map((username) => {
+                    mentions.push({
+                      username,
+                      location: `update-${idx}-comment:${comment._id}`,
+                    })
+                  })
+                }
+              },
+            ),
+          )
+        }
+      }),
+    )
+    ;(users || []).map((username) => {
+      mentions.push({
+        username,
+        location: 'description',
+      })
+    })
+
+    if (researchItem.previousSlugs === undefined) {
+      researchItem.previousSlugs = []
+    }
+
+    if (!researchItem.previousSlugs.includes(researchItem.slug)) {
+      researchItem.previousSlugs.push(researchItem.slug)
+    }
+
+    await dbRef.set({
+      ...cloneDeep(researchItem),
+      mentions,
+      description: researchDescription,
+    })
+
+    // Side effects from updating research item
+    // consider moving these out of the store.
+    const previousMentionsList = researchItem.mentions || []
+    logger.debug(`Mentions:`, {
+      before: previousMentionsList,
+      after: mentions,
+    })
+
+    // Previous mentions
+    const previousMentions = previousMentionsList.map(
+      (mention) => `${mention.username}.${mention.location}`,
+    )
+
+    mentions.forEach((mention) => {
+      if (
+        !previousMentions.includes(`${mention.username}.${mention.location}`)
+      ) {
+        this.userNotificationsStore.triggerNotification(
+          'research_mention',
+          mention.username,
+          `/research/${researchItem.slug}#${mention.location}`,
+        )
+      }
+    })
+
+    // Notify each subscriber
+    const subscribers = researchItem.subscribers || []
+
+    // Only notify subscribers if there is a new update added
+    logger.debug('Notify each subscriber', {
+      subscribers,
+      beforeUpdateNumber: previousVersion?.updates
+        ? previousVersion?.updates.length
+        : 0,
+      afterUpdateNumber: researchItem?.updates.length,
+    })
+
+    if (
+      researchItem.updates.length >
+      (previousVersion?.updates ? previousVersion?.updates.length : 0)
+    ) {
+      subscribers.forEach((subscriber) =>
+        this.userNotificationsStore.triggerNotification(
+          'research_update',
+          subscriber,
+          `/research/${researchItem.slug}`,
+        ),
+      )
+    }
+
+    return await dbRef.get()
+  }
+
+  private async _getResearchItemBySlug(
+    slug: string,
+  ): Promise<IResearchDB | undefined> {
+    const collection = await this.db
+      .collection<IResearch.ItemDB>(COLLECTION_NAME)
+      .getWhere('slug', '==', slug)
+
+    if (collection && collection.length) {
+      return collection[0]
+    }
+
+    const previousSlugCollection = await this.db
+      .collection<IResearch.ItemDB>(COLLECTION_NAME)
+      .getWhere('previousSlugs', 'array-contains', slug)
+
+    if (previousSlugCollection && previousSlugCollection.length) {
+      return previousSlugCollection[0]
+    }
+
+    return undefined
   }
 }
 

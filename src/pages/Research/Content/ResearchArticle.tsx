@@ -2,6 +2,7 @@ import { observer } from 'mobx-react'
 import {
   ArticleCallToAction,
   Button,
+  FollowButton,
   Loader,
   UsefulStatsButton,
 } from 'oa-components'
@@ -10,7 +11,7 @@ import type { RouteComponentProps } from 'react-router'
 import { Link } from 'react-router-dom'
 import { trackEvent } from 'src/common/Analytics'
 import { isUserVerified } from 'src/common/isUserVerified'
-import type { IComment, IResearch, UserComment } from 'src/models'
+import type { IComment, IResearch, UserComment, IUser } from 'src/models'
 import { NotFoundPage } from 'src/pages/NotFound/NotFound'
 import { useResearchStore } from 'src/stores/Research/research.store'
 import type { IUploadedFileMeta } from 'src/stores/storage'
@@ -141,7 +142,7 @@ const ResearchArticle = observer((props: IProps) => {
       isVerified: isUserVerified(item._createdBy),
     }
 
-    const onFollowingClick = async (researchSlug: string) => {
+    const onFollowClick = async (researchSlug: string) => {
       if (!loggedInUser?.userName) {
         return null
       }
@@ -178,12 +179,13 @@ const ResearchArticle = observer((props: IProps) => {
           isEditable={isEditable}
           needsModeration={researchStore.needsModeration(item)}
           hasUserVotedUseful={researchStore.userVotedActiveResearchUseful}
+          hasUserSubscribed={researchStore.userHasSubscribed}
           moderateResearch={moderateResearch}
           onUsefulClick={() =>
             onUsefulClick(item._id, item._createdBy, item.slug)
           }
-          onFollowingClick={() => {
-            onFollowingClick(item.slug)
+          onFollowClick={() => {
+            onFollowClick(item.slug)
           }}
         />
         <Box my={16}>
@@ -199,7 +201,8 @@ const ResearchArticle = observer((props: IProps) => {
                   slug={item.slug}
                   comments={transformToUserComment(
                     researchStore.getActiveResearchUpdateComments(index),
-                    loggedInUser?.userName,
+                    loggedInUser,
+                    item,
                   )}
                   showComments={areCommentVisible(index)}
                 />
@@ -228,6 +231,11 @@ const ResearchArticle = observer((props: IProps) => {
                 onUsefulClick(item._id, item._createdBy, item.slug)
               }}
             />
+            <FollowButton
+              isLoggedIn={!!loggedInUser}
+              hasUserSubscribed={researchStore.userHasSubscribed}
+              onFollowClick={() => onFollowClick(item.slug)}
+            ></FollowButton>
           </ArticleCallToAction>
         </Box>
         {isEditable && (
@@ -252,12 +260,15 @@ const isUpdateVisible = (update: IResearch.UpdateDB) => {
 
 const transformToUserComment = (
   comments: IComment[],
-  loggedInUsername,
+  loggedInUser: IUser | undefined,
+  item: IResearch.ItemDB,
 ): UserComment[] => {
   if (!comments) return []
   return comments.map((c) => ({
     ...c,
-    isEditable: c.creatorName === loggedInUsername,
+    isEditable:
+      c.creatorName === loggedInUser?.userName ||
+      isAllowToEditContent(item, loggedInUser),
   }))
 }
 
