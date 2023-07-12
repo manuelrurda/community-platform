@@ -331,17 +331,19 @@ const HowtoDescription = ({ howto, loggedInUser, ...props }: IProps) => {
           position: 'relative',
         }}
       >
-        <AspectImage
-          loading="lazy"
-          ratio={12 / 9}
-          sx={{
-            objectFit: 'cover',
-            width: '100%',
-          }}
-          src={howto.cover_image.downloadUrl}
-          crossOrigin=""
-          alt="how-to cover"
-        />
+        {howto.cover_image?.downloadUrl ? (
+          <AspectImage
+            loading="lazy"
+            ratio={12 / 9}
+            sx={{
+              objectFit: 'cover',
+              width: '100%',
+            }}
+            src={howto.cover_image.downloadUrl}
+            crossOrigin=""
+            alt="how-to cover"
+          />
+        ) : null}
         {howto.moderation !== 'accepted' && (
           <ModerationStatus
             status={howto.moderation}
