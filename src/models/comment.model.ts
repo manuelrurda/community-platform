@@ -14,4 +14,5 @@ export interface IComment {
   creatorCountry?: string | null
   text: string
   isUserVerified?: boolean
+  replies?: IComment[]
 }
