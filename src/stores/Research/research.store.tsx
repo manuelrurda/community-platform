@@ -125,7 +125,6 @@ export class ResearchStore extends ModuleStore {
 
   public formatResearchCommentList(comments: IComment[] = []): IComment[] {
     return comments.map((comment: IComment) => {
-
       const formatedComment = {
         ...comment,
         text: changeUserReferenceToPlainText(comment.text),
@@ -389,7 +388,7 @@ export class ResearchStore extends ModuleStore {
   public async addComment(
     text: string,
     update: IResearch.Update | IResearch.UpdateDB,
-    commentId?: string
+    commentId?: string,
   ) {
     const user = this.activeUser
     const researchItem = this.activeResearchItem
@@ -425,15 +424,11 @@ export class ResearchStore extends ModuleStore {
         }
 
         if (commentId) {
-          logger.info(newComment)
-          const newComments = updateWithMeta.comments?.map(c => {
+          const newComments = updateWithMeta.comments?.map((c) => {
             if (c._id == commentId) {
-              if (!c.replies)
-                c.replies = []
-
+              if (!c.replies) c.replies = []
               c.replies.push(newComment)
             }
-            logger.info(c.replies)
             return c
           })
 
@@ -501,17 +496,24 @@ export class ResearchStore extends ModuleStore {
         const id = dbRef.id
 
         const filterValidation = (comment: IComment) => {
-          return !((comment._creatorId === user._id || hasAdminRights(user)) &&
-          comment._id === commentId)
+          return !(
+            (comment._creatorId === user._id || hasAdminRights(user)) &&
+            comment._id === commentId
+          )
         }
 
-        const filteredReplies = toJS(update.comments).map(comment => {
-          const newReplies = comment.replies?.filter(reply => filterValidation(reply))
-          return {...comment, replies: newReplies}
+        const filteredReplies = toJS(update.comments).map((comment) => {
+          if (comment.replies) {
+            const newReplies = comment.replies.filter((reply) =>
+              filterValidation(reply),
+            )
+            return { ...comment, replies: newReplies }
+          }
+          return { ...comment }
         })
 
-        const newComments = filteredReplies.filter(
-          (comment) => filterValidation(comment),
+        const newComments = filteredReplies.filter((comment) =>
+          filterValidation(comment),
         )
 
         const updateWithMeta = { ...update }
@@ -577,16 +579,20 @@ export class ResearchStore extends ModuleStore {
           const newImg = imgMeta.map((img) => ({ ...img }))
           updateWithMeta.images = newImg
         } else updateWithMeta.images = []
-        
-        const editedComments = toJS(update.comments).map(comment => {
-          if ((comment._creatorId === user._id || hasAdminRights(user)) &&
-          comment._id === commentId) {
+
+        const editedComments = toJS(update.comments).map((comment) => {
+          if (
+            (comment._creatorId === user._id || hasAdminRights(user)) &&
+            comment._id === commentId
+          ) {
             comment.text = newText.slice(0, MAX_COMMENT_LENGTH).trim()
             comment._edited = new Date().toISOString()
           } else {
-            comment.replies = comment.replies?.map(reply => {
-              if ((reply._creatorId === user._id || hasAdminRights(user)) &&
-              reply._id === commentId) {
+            comment.replies = comment.replies?.map((reply) => {
+              if (
+                (reply._creatorId === user._id || hasAdminRights(user)) &&
+                reply._id === commentId
+              ) {
                 reply.text = newText.slice(0, MAX_COMMENT_LENGTH).trim()
                 reply._edited = new Date().toISOString()
               }
@@ -616,7 +622,6 @@ export class ResearchStore extends ModuleStore {
         if (updatedItem) {
           this.setActiveResearchItemBySlug(updatedItem.slug)
         }
-        
       }
     } catch (err) {
       logger.error(err)

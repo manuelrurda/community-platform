@@ -270,9 +270,9 @@ const transformToUserComment = (
     }
 
     if (userComments.replies) {
-      const userReplies = userComments.replies.map(reply => ({
+      const userReplies = userComments.replies.map((reply) => ({
         ...reply,
-        isEditable: 
+        isEditable:
           reply.creatorName === loggedInUser?.userName ||
           isAllowedToEditContent(item, loggedInUser),
       }))
