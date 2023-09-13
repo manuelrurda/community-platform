@@ -53,6 +53,9 @@ export const getNotificationEmailTemplate = (
             .notifications-header-icon {
               margin-right: 8px;
             }
+            .unsubscribe {
+              margin-top: 8px
+            }
             @media only screen and (max-width: 550px) {
               .table-container {
                 width: 100%;
@@ -98,10 +101,15 @@ export const getNotificationEmailTemplate = (
           <table class="settings-table-container">
             <tr>
               <td align="center">
-                <div class="notifications">
+                <div>
                   Manage your notifications
                   <a href="${SITE_URL}/settings"> here</a>
                 </div>
+                <div class="unsubscribe">
+                  <a href="${SITE_URL}/unsubscribe/${
+        user.userName
+      }">Unsubscribe</a>
+              </div>
               </td>
             </tr>
           </table>

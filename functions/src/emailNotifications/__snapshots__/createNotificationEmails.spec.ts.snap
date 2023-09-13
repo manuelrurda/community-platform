@@ -40,6 +40,9 @@ exports[`create email test Creates email from pending notifications monthly 1`] 
       .notifications-header-icon {
         margin-right: 8px;
       }
+      .unsubscribe {
+        margin-top: 8px;
+      }
       @media only screen and (max-width: 550px) {
         .table-container {
           width: 100%;
@@ -121,10 +124,16 @@ exports[`create email test Creates email from pending notifications monthly 1`] 
           <table class="settings-table-container">
             <tr>
               <td align="center">
-                <div class="notifications">
+                <div>
                   Manage your notifications
                   <a href="https://community.preciousplastic.com/settings">
                     here</a
+                  >
+                </div>
+                <div class="unsubscribe">
+                  <a
+                    href="https://community.preciousplastic.com/unsubscribe/user_2"
+                    >Unsubscribe</a
                   >
                 </div>
               </td>
@@ -177,6 +186,9 @@ exports[`create email test Creates email from pending notifications weekly 1`] =
       }
       .notifications-header-icon {
         margin-right: 8px;
+      }
+      .unsubscribe {
+        margin-top: 8px;
       }
       @media only screen and (max-width: 550px) {
         .table-container {
@@ -254,10 +266,16 @@ exports[`create email test Creates email from pending notifications weekly 1`] =
           <table class="settings-table-container">
             <tr>
               <td align="center">
-                <div class="notifications">
+                <div>
                   Manage your notifications
                   <a href="https://community.preciousplastic.com/settings">
                     here</a
+                  >
+                </div>
+                <div class="unsubscribe">
+                  <a
+                    href="https://community.preciousplastic.com/unsubscribe/user_1"
+                    >Unsubscribe</a
                   >
                 </div>
               </td>
